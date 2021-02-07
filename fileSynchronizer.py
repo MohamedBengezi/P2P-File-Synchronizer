@@ -127,8 +127,6 @@ class FileSynchronizer(threading.Thread):
 
         # Store the message to be sent to the tracker.
         # Initialize to the Init message that contains port number and file info.
-        # Refer to Table 1 in Instructions.pdf for the format of the Init message
-        # You can use json.dumps to conver a python dictionary to a json string
         msg = {"port": port, "files": get_file_info()}
         self.msg = json.dumps(msg)
 
@@ -154,14 +152,10 @@ class FileSynchronizer(threading.Thread):
         conn -- socket object for an accepted connection from a peer
         addr -- address bound to the socket of the accepted connection
         '''
-        # YOUR CODE
         # Step 1. read the file name contained in the request through conn
         # Step 2. read content of that file(assumming binary file <4MB), you can open with 'rb'
         # Step 3. send the content back to the requester through conn
         # Step 4. close conn when you are done.
-        # tracker.exe 127.0.0.1 9988
-        # cd ../../../test1
-        # python Skeleton.py 127.0.0.1 9988
         print('connect to ' + addr[0] + ':' + str(addr[1]))
 
         try:
@@ -229,14 +223,7 @@ class FileSynchronizer(threading.Thread):
             # more up-to-date files, request the files from the respective peers.
             # NOTE: compare the modified time of the files in the message and
             # that of local files of the same name.
-            # Hint: a. use json.loads to parse the message from the tracker
-            #      b. read all local files, use os.path.getmtime to get the mtime
-            #         (also note round down to int)
-            #      c. for new or more up-to-date file, you need to create a socket,
-            #         connect to the peer that contains that file, send the file name, and
-            #         receive the file content from that peer
-            #      d. finally, write the file content to disk with the file name, use os.utime
-            #         to set the mtime
+
             resDir = json.loads(directory_response_message)
             localDir = get_file_info()
             local = {}
@@ -257,8 +244,6 @@ class FileSynchronizer(threading.Thread):
                         file, (resDir[file]['mtime'], resDir[file]['mtime']))
 
             # Step 4. construct and send the KeepAlive message
-            # Note KeepAlive msg is sent multiple times, the format can be found in Table 1
-            # use json.dumps to convert python dict to json string.
 
             msg = {"port": self.port}
             self.msg = json.dumps(msg)
