@@ -165,8 +165,6 @@ class FileSynchronizer(threading.Thread):
             filename = message.decode()
             print('Client request ' + filename)
 
-            file_ext = os.path.splitext(filename)[1]
-
             f = open(filename, 'rb')
             msg = f.read()
 
@@ -214,9 +212,6 @@ class FileSynchronizer(threading.Thread):
             if not directory_response_message:
                 return
 
-            directory_response_message = directory_response_message.split("}}")[
-                0] + "}}"
-
             print('received from tracker:', directory_response_message)
 
             # Step 3. parse the directory response message. If it contains new or
@@ -231,23 +226,24 @@ class FileSynchronizer(threading.Thread):
                 local[i['name']] = i['mtime']
 
             for file in resDir.keys():
-                if file not in local.keys() or resDir[file]['mtime'] > local[file]:
+                if file not in local.keys() or int(resDir[file]['mtime']) > int(local[file]):
                     print('retrieving %s' % file)
                     peer = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                     peer.connect((resDir[file]['ip'], resDir[file]['port']))
                     peer.send(bytes(file, 'utf-8'))
                     contents = peer.recv(2048).decode()
+                    contents = contents.replace("\r", "")
                     f = open(file, 'w')
                     f.write(contents)
                     f.close()
                     os.utime(
-                        file, (resDir[file]['mtime'], resDir[file]['mtime']))
+                        file, (int(resDir[file]['mtime']), int(resDir[file]['mtime'])))
+                    peer.close()
 
             # Step 4. construct and send the KeepAlive message
 
             msg = {"port": self.port}
             self.msg = json.dumps(msg)
-            self.client.send(bytes(self.msg, 'utf-8'))
             # Step 5. start timer
             t = threading.Timer(5, self.sync)
             t.start()
