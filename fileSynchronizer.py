@@ -216,8 +216,6 @@ class FileSynchronizer(threading.Thread):
 
             # Step 3. parse the directory response message. If it contains new or
             # more up-to-date files, request the files from the respective peers.
-            # NOTE: compare the modified time of the files in the message and
-            # that of local files of the same name.
 
             resDir = json.loads(directory_response_message)
             localDir = get_file_info()
@@ -231,10 +229,12 @@ class FileSynchronizer(threading.Thread):
                     peer = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                     peer.connect((resDir[file]['ip'], resDir[file]['port']))
                     peer.send(bytes(file, 'utf-8'))
-                    contents = peer.recv(2048).decode()
-                    contents = contents.replace("\r", "")
-                    f = open(file, 'w')
-                    f.write(contents)
+                    f = open(file, 'wb')
+                    while True:
+                        contents = peer.recv(2048)
+                        if not contents:
+                            break
+                        f.write(contents)
                     f.close()
                     os.utime(
                         file, (int(resDir[file]['mtime']), int(resDir[file]['mtime'])))
